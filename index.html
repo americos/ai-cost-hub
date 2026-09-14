@@ -371,8 +371,6 @@ async function loadPrices() {
   document.getElementById("footAsOf").textContent = "prices as of " + stamp;
 }
 
-const SCENARIOS;
-
 const SCENARIOS = {
   pr_review: { inK: 40, outK: 8, hint: "Light review: small diff + checklist. Prefer Sonnet / Flash / Terra." },
   feature: { inK: 120, outK: 35, hint: "Feature loop: repo context + a few tool rounds. Sonnet default; Opus if design forks." },
