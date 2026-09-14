@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Cost Hub — right model for the job</title>
+<meta name="description" content="Spend the same budget better. Live-ish model price board + task cost calculator for Sonnet-by-default / Opus-for-thinking teams." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0614;
+    --bg2: #12081f;
+    --panel: rgba(24, 10, 48, 0.72);
+    --pink: #ff2bd6;
+    --cyan: #2de2e6;
+    --purple: #9b5cff;
+    --yellow: #f9f871;
+    --green: #39ff14;
+    --text: #f4ecff;
+    --muted: #b9a8d9;
+    --line: rgba(255, 43, 214, 0.35);
+    --glow: 0 0 18px rgba(45, 226, 230, 0.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: "Exo 2", system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(155, 92, 255, 0.35), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 20%, rgba(255, 43, 214, 0.18), transparent 50%),
+      linear-gradient(180deg, #0a0614 0%, #140a28 45%, #070412 100%);
+    min-height: 100vh;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(45,226,230,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,43,214,0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+  }
+  .wrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 28px 20px 80px; }
+  header.hero {
+    text-align: center;
+    padding: 36px 16px 28px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(255,43,214,0.12), rgba(45,226,230,0.08));
+    box-shadow: var(--glow), inset 0 0 40px rgba(155,92,255,0.12);
+  }
+  .eyebrow {
+    font-family: "Share Tech Mono", monospace;
+    color: var(--cyan);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+  }
+  h1 {
+    font-family: Orbitron, sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    margin: 10px 0 12px;
+    line-height: 1.15;
+    background: linear-gradient(90deg, var(--cyan), var(--pink), var(--yellow));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 30px rgba(255,43,214,0.25);
+  }
+  .thesis {
+    max-width: 46rem;
+    margin: 0 auto;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.5;
+  }
+  .thesis strong { color: var(--yellow); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+  .chip {
+    font-family: "Share Tech Mono", monospace;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(45,226,230,0.4);
+    color: var(--cyan);
+    background: rgba(0,0,0,0.25);
+  }
+  .chip.hot { border-color: var(--pink); color: var(--pink); }
+  nav.toc {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin: 22px 0 8px;
+  }
+  nav.toc a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.86rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(155,92,255,0.4);
+    background: var(--panel);
+  }
+  nav.toc a:hover { border-color: var(--cyan); color: var(--cyan); }
+  section {
+    margin-top: 28px;
+    padding: 22px;
+    border-radius: 16px;
+    border: 1px solid rgba(155,92,255,0.35);
+    background: var(--panel);
+    backdrop-filter: blur(8px);
+  }
+  h2 {
+    font-family: Orbitron, sans-serif;
+    font-size: 1.15rem;
+    margin: 0 0 6px;
+    color: var(--cyan);
+  }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: 0.95rem; }
+  .asof {
+    font-family: "Share Tech Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--pink);
+    margin-bottom: 12px;
+  }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; align-items: end; }
+  label { display: grid; gap: 4px; font-size: 0.78rem; color: var(--muted); }
+  select, input[type="number"] {
+    background: #0d0718;
+    color: var(--text);
+    border: 1px solid rgba(45,226,230,0.35);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: "Share Tech Mono", monospace;
+    min-width: 140px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid rgba(155,92,255,0.25); }
+  th {
+    font-family: "Share Tech Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--cyan);
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { color: var(--yellow); }
+  tr:hover td { background: rgba(45,226,230,0.05); }
+  .vendor { font-family: "Share Tech Mono", monospace; font-size: 0.72rem; color: var(--muted); }
+  .price { font-family: "Share Tech Mono", monospace; color: var(--green); }
+  .badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+    border: 1px solid currentColor;
+  }
+  .badge.default { color: var(--cyan); }
+  .badge.think { color: var(--pink); }
+  .badge.cheap { color: var(--green); }
+  .grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+  .card {
+    border: 1px solid rgba(255,43,214,0.3);
+    border-radius: 12px;
+    padding: 14px;
+    background: rgba(0,0,0,0.28);
+  }
+  .card h3 { margin: 0 0 8px; font-size: 1rem; color: var(--yellow); font-family: Orbitron, sans-serif; }
+  .big {
+    font-family: Orbitron, sans-serif;
+    font-size: 1.8rem;
+    color: var(--cyan);
+    text-shadow: 0 0 16px rgba(45,226,230,0.45);
+  }
+  .compare-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px dashed rgba(155,92,255,0.25); font-family: "Share Tech Mono", monospace; font-size: 0.82rem; }
+  .quad { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 700px) { .quad { grid-template-columns: 1fr; } }
+  .quad .card p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 0.92rem; }
+  .rules { list-style: none; padding: 0; margin: 0; }
+  .rules li {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--pink);
+    background: rgba(0,0,0,0.25);
+    border-radius: 0 10px 10px 0;
+  }
+  .rules li code { color: var(--cyan); font-family: "Share Tech Mono", monospace; }
+  footer {
+    margin-top: 28px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  footer a { color: var(--cyan); }
+  .note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Meeting deck · AI cost hub</div>
+    <h1>AI cost &amp; the right model for the job</h1>
+    <p class="thesis">
+      Spend the <strong>same budget better</strong>, not just less.
+      <strong>Sonnet by default</strong>. <strong>Opus for the thinking</strong>.
+      Route the hard 10% to frontier models — keep the other 90% on the workhorse.
+    </p>
+    <div class="chips">
+      <span class="chip">models &amp; harnesses</span>
+      <span class="chip">our skills</span>
+      <span class="chip">Argus adoption</span>
+      <span class="chip hot">routing · cost · toolbox</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#board">Price board</a>
+    <a href="#calc">Task calculator</a>
+    <a href="#route">Routing rules</a>
+    <a href="#groups">4 sub-groups</a>
+    <a href="#sources">Sources</a>
+  </nav>
+
+  <section id="board">
+    <h2>Everyday price board</h2>
+    <p class="sub">USD per 1M tokens (API list rates). Click a column header to sort. Filter by vendor.</p>
+    <div class="asof" id="asof">As of 14 Sep 2026 · verify before buying</div>
+    <div class="controls">
+      <label>Vendor
+        <select id="vendorFilter">
+          <option value="all">All</option>
+          <option value="Anthropic">Anthropic</option>
+          <option value="OpenAI">OpenAI</option>
+          <option value="Google">Google</option>
+          <option value="xAI">xAI</option>
+        </select>
+      </label>
+      <label>Sort by
+        <select id="sortBy">
+          <option value="blended">Blended (in+out)</option>
+          <option value="input">Input</option>
+          <option value="output">Output</option>
+          <option value="name">Name</option>
+        </select>
+      </label>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="name">Model</th>
+            <th data-sort="input">Input / 1M</th>
+            <th data-sort="output">Output / 1M</th>
+            <th data-sort="blended">≈ Blended*</th>
+            <th>Best for</th>
+          </tr>
+        </thead>
+        <tbody id="priceBody"></tbody>
+      </table>
+    </div>
+    <p class="note">*Blended assumes a typical agent mix of 70% input / 30% output tokens (prompt + tools heavy). Not a quote — a comparison stick.</p>
+  </section>
+
+  <section id="calc">
+    <h2>Task cost calculator</h2>
+    <p class="sub">Pick a job shape. See what the same work costs across models — same tokens, different rates.</p>
+    <div class="grid-2">
+      <div>
+        <div class="controls">
+          <label>Scenario
+            <select id="scenario">
+              <option value="pr_review">PR review (light)</option>
+              <option value="feature">Feature implement (medium)</option>
+              <option value="hard_bug">Hard bug / design (heavy thinking)</option>
+              <option value="bulk">Bulk classify / extract (cheap lane)</option>
+              <option value="custom">Custom tokens</option>
+            </select>
+          </label>
+          <label>Input tokens (k)
+            <input type="number" id="inK" min="1" step="1" value="80" />
+          </label>
+          <label>Output tokens (k)
+            <input type="number" id="outK" min="1" step="1" value="20" />
+          </label>
+        </div>
+        <div class="card" id="scenarioHint"></div>
+        <div style="margin-top:12px" id="compareList"></div>
+      </div>
+      <div class="card">
+        <h3>Same job, different lanes</h3>
+        <p class="sub" style="margin-bottom:10px">Illustrative cost for the selected scenario.</p>
+        <div id="laneCards"></div>
+        <p class="note">Rule of thumb: if Opus is ~2.5× Sonnet, you need Opus to be &gt;2.5× more likely to finish correctly (or save that many retries) to break even.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="route">
+    <h2>Routing rules (meeting thesis)</h2>
+    <ul class="rules">
+      <li><strong>Default = Sonnet</strong> — everyday coding, refactors, reviews, drafts. Best $/intelligence for most harness work.</li>
+      <li><strong>Escalate = Opus</strong> — ambiguous design, multi-file root-cause, security-sensitive diffs, “stuck after 2 Sonnet attempts.”</li>
+      <li><strong>Bulk = Haiku / Flash / Luna / nano</strong> — classify, summarize, extract, format. Don’t burn frontier tokens on glue.</li>
+      <li><strong>Cache &amp; batch</strong> — repeated system prompts and offline jobs often beat “pick a cheaper model” alone (Anthropic cache reads ~10% of input; Gemini/xAI batch/flex discounts vary).</li>
+      <li><strong>Harness &gt; model</strong> — a tight skill + good tests on Sonnet often beats Opus on a sloppy prompt. Spend budget on <code>context quality</code>, not only model tier.</li>
+    </ul>
+  </section>
+
+  <section id="groups">
+    <h2>Four sub-groups</h2>
+    <p class="sub">Agenda map for the meeting — same budget, sharper allocation.</p>
+    <div class="quad">
+      <div class="card">
+        <h3>1 · Models &amp; harnesses</h3>
+        <p>Which models are wired into Cursor / Claude Code / Argus / internal bots. Defaults, max mode, thinking effort. Price board is the shared scoreboard.</p>
+      </div>
+      <div class="card">
+        <h3>2 · Our skills</h3>
+        <p>Reusable playbooks that cut retries. A good skill on Sonnet beats a vague prompt on Opus. Cost lives in turns, not just $/MTok.</p>
+      </div>
+      <div class="card">
+        <h3>3 · Argus adoption &amp; new use cases</h3>
+        <p>Where the team still under-uses agents (ops, triage, docs) vs overspends (frontier on glue work). New cases should ship with a default model + escalate path.</p>
+      </div>
+      <div class="card">
+        <h3>4 · Routing, cost + common toolbox</h3>
+        <p>Shared calculator, price board, and “Sonnet → Opus” rules. One toolbox so everyday price checks don’t live in someone’s head.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="sources">
+    <h2>Sources</h2>
+    <p class="sub">Official (or vendor) pages used for this snapshot. Re-check before a purchase decision.</p>
+    <ul class="rules">
+      <li>Anthropic models overview — <a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com</a> (Fable / Opus / Sonnet / Haiku)</li>
+      <li>OpenAI API pricing — <a href="https://openai.com/api/pricing/" target="_blank" rel="noopener">openai.com/api/pricing</a> (+ docs rate card for 5.6 family)</li>
+      <li>Google Gemini Developer API pricing — <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener">ai.google.dev</a> (updated 11 Sep 2026)</li>
+      <li>xAI text API pricing — <a href="https://docs.x.ai/developers/pricing" target="_blank" rel="noopener">docs.x.ai</a></li>
+    </ul>
+    <p class="note">This page is a meeting aid, not billing. Enterprise discounts, priority tiers, and long-context surcharges can change the math.</p>
+  </section>
+
+  <footer>
+    Built for the “AI cost &amp; the right model for the job” session · synthwave price hub ·
+    <span id="footAsOf"></span>
+  </footer>
+</div>
+
+<script>
+const MODELS = [
+  { vendor: "Anthropic", name: "Claude Sonnet 5", input: 2, output: 10, role: "default", best: "Default coding / agents", badge: "default", badgeText: "DEFAULT" },
+  { vendor: "Anthropic", name: "Claude Opus 5", input: 5, output: 25, role: "think", best: "Hard reasoning / stuck cases", badge: "think", badgeText: "THINK" },
+  { vendor: "Anthropic", name: "Claude Haiku 4.5", input: 1, output: 5, role: "cheap", best: "Fast high-volume", badge: "cheap", badgeText: "CHEAP" },
+  { vendor: "Anthropic", name: "Claude Fable 5.1", input: 10, output: 50, role: "frontier", best: "Long-horizon agentic", badge: "", badgeText: "" },
+  { vendor: "OpenAI", name: "GPT-5.4", input: 2.5, output: 15, role: "default", best: "General / coding peer", badge: "", badgeText: "" },
+  { vendor: "OpenAI", name: "GPT-5.5", input: 5, output: 30, role: "think", best: "Flagship OpenAI", badge: "", badgeText: "" },
+  { vendor: "OpenAI", name: "GPT-5.4 mini", input: 0.75, output: 4.5, role: "cheap", best: "Cheaper workhorse", badge: "cheap", badgeText: "CHEAP" },
+  { vendor: "OpenAI", name: "GPT-5.4 nano", input: 0.2, output: 1.25, role: "cheap", best: "Bulk / classify", badge: "cheap", badgeText: "CHEAP" },
+  { vendor: "OpenAI", name: "GPT-5.6 Sol", input: 4, output: 20, role: "think", best: "Current Sol tier", badge: "", badgeText: "" },
+  { vendor: "OpenAI", name: "GPT-5.6 Terra", input: 2, output: 12, role: "default", best: "Mid Sol family", badge: "", badgeText: "" },
+  { vendor: "OpenAI", name: "GPT-5.6 Luna", input: 0.2, output: 1.2, role: "cheap", best: "Cheapest Sol lane", badge: "cheap", badgeText: "CHEAP" },
+  { vendor: "Google", name: "Gemini 3.8 Flash", input: 0.75, output: 3.75, role: "default", best: "Agentic Flash (promo thru Dec 2026)", badge: "", badgeText: "" },
+  { vendor: "Google", name: "Gemini 3.1 Pro Preview (≤200k)", input: 2, output: 12, role: "think", best: "Flagship multimodal", badge: "", badgeText: "" },
+  { vendor: "Google", name: "Gemini 3.1 Flash-Lite", input: 0.25, output: 1.5, role: "cheap", best: "High-volume cheap", badge: "cheap", badgeText: "CHEAP" },
+  { vendor: "Google", name: "Gemini 2.5 Flash", input: 0.3, output: 2.5, role: "cheap", best: "Balanced Flash", badge: "cheap", badgeText: "CHEAP" },
+  { vendor: "xAI", name: "Grok 4.6 (<200k)", input: 2, output: 6, role: "default", best: "Flagship Grok", badge: "", badgeText: "" },
+  { vendor: "xAI", name: "Grok Build 0.1 (<200k)", input: 1, output: 2, role: "cheap", best: "Build-oriented", badge: "cheap", badgeText: "CHEAP" },
+  { vendor: "xAI", name: "Grok 4.3 (<200k)", input: 1.25, output: 2.5, role: "default", best: "Efficient Grok", badge: "", badgeText: "" },
+];
+
+const SCENARIOS = {
+  pr_review: { inK: 40, outK: 8, hint: "Light review: small diff + checklist. Prefer Sonnet / Flash / Terra." },
+  feature: { inK: 120, outK: 35, hint: "Feature loop: repo context + a few tool rounds. Sonnet default; Opus if design forks." },
+  hard_bug: { inK: 200, outK: 60, hint: "Hard bug: long traces, multiple hypotheses. Budget Opus (or Fable) for the thinking slice." },
+  bulk: { inK: 500, outK: 50, hint: "Bulk extract/classify. Haiku / Luna / Flash-Lite / nano — never Opus." },
+  custom: { inK: 80, outK: 20, hint: "Dial the tokens to match your harness logs." },
+};
+
+function blended(m) { return m.input * 0.7 + m.output * 0.3; }
+function cost(m, inTok, outTok) {
+  return (inTok / 1e6) * m.input + (outTok / 1e6) * m.output;
+}
+function money(n) {
+  if (n < 0.01) return "$" + n.toFixed(4);
+  if (n < 1) return "$" + n.toFixed(3);
+  return "$" + n.toFixed(2);
+}
+
+let sortKey = "blended";
+
+function renderTable() {
+  const vendor = document.getElementById("vendorFilter").value;
+  let rows = MODELS.filter(m => vendor === "all" || m.vendor === vendor);
+  rows = rows.slice().sort((a, b) => {
+    if (sortKey === "name") return a.name.localeCompare(b.name);
+    if (sortKey === "input") return a.input - b.input;
+    if (sortKey === "output") return a.output - b.output;
+    return blended(a) - blended(b);
+  });
+  document.getElementById("priceBody").innerHTML = rows.map(m => {
+    const badge = m.badge ? `<span class="badge ${m.badge}">${m.badgeText}</span>` : "";
+    return `<tr>
+      <td><div>${m.name}${badge}</div><div class="vendor">${m.vendor}</div></td>
+      <td class="price">$${m.input.toFixed(2)}</td>
+      <td class="price">$${m.output.toFixed(2)}</td>
+      <td class="price">$${blended(m).toFixed(2)}</td>
+      <td>${m.best}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderCalc() {
+  const sc = document.getElementById("scenario").value;
+  if (sc !== "custom") {
+    document.getElementById("inK").value = SCENARIOS[sc].inK;
+    document.getElementById("outK").value = SCENARIOS[sc].outK;
+  }
+  document.getElementById("scenarioHint").innerHTML = `<h3>Scenario</h3><p class="sub" style="margin:0">${SCENARIOS[sc].hint}</p>`;
+  const inTok = Number(document.getElementById("inK").value) * 1000;
+  const outTok = Number(document.getElementById("outK").value) * 1000;
+
+  const focus = ["Claude Haiku 4.5", "Claude Sonnet 5", "Claude Opus 5", "GPT-5.4", "GPT-5.5", "Gemini 3.8 Flash", "Grok 4.6 (<200k)"];
+  const list = MODELS.filter(m => focus.includes(m.name))
+    .map(m => ({ m, c: cost(m, inTok, outTok) }))
+    .sort((a, b) => a.c - b.c);
+
+  document.getElementById("compareList").innerHTML = list.map(({ m, c }) =>
+    `<div class="compare-row"><span>${m.name}</span><span class="price">${money(c)}</span></div>`
+  ).join("");
+
+  const sonnet = MODELS.find(m => m.name === "Claude Sonnet 5");
+  const opus = MODELS.find(m => m.name === "Claude Opus 5");
+  const haiku = MODELS.find(m => m.name === "Claude Haiku 4.5");
+  const cs = cost(sonnet, inTok, outTok);
+  const co = cost(opus, inTok, outTok);
+  const ch = cost(haiku, inTok, outTok);
+  document.getElementById("laneCards").innerHTML = `
+    <div class="compare-row"><span>Haiku lane</span><span class="price">${money(ch)}</span></div>
+    <div class="compare-row"><span>Sonnet default</span><span class="price">${money(cs)}</span></div>
+    <div class="compare-row"><span>Opus thinking</span><span class="price">${money(co)}</span></div>
+    <p style="margin:14px 0 0;color:var(--muted);font-size:0.88rem">
+      Opus / Sonnet multiplier on this job: <strong style="color:var(--yellow)">${(co / cs).toFixed(2)}×</strong>.
+      Sonnet / Haiku: <strong style="color:var(--cyan)">${(cs / ch).toFixed(2)}×</strong>.
+    </p>
+    <div class="big" style="margin-top:12px;font-size:1.2rem">${money(cs)} → ${money(co)}</div>
+    <div class="vendor">Sonnet default → Opus escalate (same tokens)</div>
+  `;
+}
+
+document.getElementById("vendorFilter").addEventListener("change", renderTable);
+document.getElementById("sortBy").addEventListener("change", e => { sortKey = e.target.value; renderTable(); });
+document.querySelectorAll("th[data-sort]").forEach(th => {
+  th.addEventListener("click", () => { sortKey = th.dataset.sort; document.getElementById("sortBy").value = sortKey; renderTable(); });
+});
+["scenario", "inK", "outK"].forEach(id => {
+  document.getElementById(id).addEventListener("input", renderCalc);
+  document.getElementById(id).addEventListener("change", renderCalc);
+});
+
+document.getElementById("asof").textContent = "As of 14 Sep 2026 · verify on vendor pages before buying";
+document.getElementById("footAsOf").textContent = "snapshot 14 Sep 2026";
+renderTable();
+renderCalc();
+</script>
+</body>
+</html>
