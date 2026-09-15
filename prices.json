@@ -1,6 +1,6 @@
 {
-  "asOf": "2026-09-14T12:07+02:00",
-  "asOfLabel": "14 Sep 2026, 12:07 Europe/Paris",
+  "asOf": "2026-09-15T08:34+02:00",
+  "asOfLabel": "15 Sep 2026, 08:34 Europe/Paris",
   "timezone": "Europe/Paris",
   "sources": [
     {
@@ -9,7 +9,7 @@
     },
     {
       "vendor": "OpenAI",
-      "url": "https://openai.com/api/pricing/"
+      "url": "https://platform.openai.com/docs/pricing"
     },
     {
       "vendor": "Google",
