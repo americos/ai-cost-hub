@@ -1,6 +1,6 @@
 {
-  "asOf": "2026-09-17T08:01+02:00",
-  "asOfLabel": "17 Sep 2026, 08:01 Europe/Paris",
+  "asOf": "2026-09-18T08:12+02:00",
+  "asOfLabel": "18 Sep 2026, 08:12 Europe/Paris",
   "timezone": "Europe/Paris",
   "sources": [
     {
@@ -143,7 +143,7 @@
     },
     {
       "vendor": "Google",
-      "name": "Gemini 3.1 Pro Preview (≤200k)",
+      "name": "Gemini 3.1 Pro Preview (\u2264200k)",
       "input": 2,
       "output": 12,
       "role": "think",
@@ -202,5 +202,5 @@
       "badgeText": ""
     }
   ],
-  "note": "Snapshot from public vendor list rates. Refreshing the browser alone does not fetch new prices — a daily job updates this file."
+  "note": "Snapshot from public vendor list rates. Refreshing the browser alone does not fetch new prices \u2014 a daily job updates this file."
 }
